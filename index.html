@@ -1,11 +1,1355 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Proyek CI/CD Pertamaku</title>
-  </head>
-  <body>
-    <h1>Halo, ini website pertamaku dengan CI/CD!</h1>
-    <p>Setiap kali saya edit dan push, website ini otomatis update.</p>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modul CI/CD Lengkap – Pemula dari Nol</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #131929;
+    --surface2: #1a2236;
+    --border: #1f2e4a;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --accent3: #22d3a5;
+    --warn: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --green: #22c55e;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 100px;
+    font-size: 14px;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(160deg, #0d1b3e 0%, #0b0f1a 60%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -80px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 250px;
+    background: radial-gradient(ellipse, rgba(0,229,255,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.3);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .hero h1 {
+    font-size: clamp(26px, 5vw, 44px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p { color: var(--muted); font-size: 14px; max-width: 500px; margin: 0 auto 24px; line-height: 1.7; }
+  .stats-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 18px; text-align: center; min-width: 90px;
+  }
+  .stat-num { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* PROGRESS */
+  .progress-wrap { max-width: 760px; margin: 28px auto 0; padding: 0 16px; }
+  .progress-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .progress-track { height: 6px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 99px; transition: width 0.5s ease; }
+
+  /* CONTAINER */
+  .container { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  .section-label {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent); margin: 40px 0 14px;
+  }
+
+  /* INTRO BOXES */
+  .intro-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 12px;
+    padding: 20px 22px; margin-bottom: 14px;
+  }
+  .intro-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+  .intro-box p { font-size: 13.5px; color: #94a3b8; line-height: 1.75; }
+  .analogy {
+    margin-top: 12px; background: rgba(0,229,255,0.06);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: var(--accent); font-style: italic; line-height: 1.6;
+  }
+
+  /* FLEXIBLE NOTE */
+  .note-flex {
+    background: rgba(34,211,165,0.07); border: 1px solid rgba(34,211,165,0.2);
+    border-radius: 12px; padding: 16px 20px; margin: 20px 0;
+    font-size: 13.5px; color: #6ee7b7; line-height: 1.7;
+  }
+  .note-flex strong { color: var(--accent3); }
+
+  /* DAY CARD */
+  .day-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; margin-bottom: 14px; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .day-card.done { border-color: var(--green); }
+  .day-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 18px; cursor: pointer; user-select: none;
+  }
+  .day-num { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; color: var(--muted); min-width: 42px; }
+  .day-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; background: var(--surface2); flex-shrink: 0; }
+  .day-info { flex: 1; min-width: 0; }
+  .day-title { font-size: 14px; font-weight: 700; color: #fff; }
+  .day-sub { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .day-tags { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+  .tag { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-family: 'Space Mono', monospace; }
+  .tag-theory { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .tag-practice { background: rgba(34,211,165,0.15); color: var(--accent3); border: 1px solid rgba(34,211,165,0.3); }
+  .tag-tool { background: rgba(0,229,255,0.1); color: var(--accent); border: 1px solid rgba(0,229,255,0.25); }
+  .tag-project { background: rgba(245,158,11,0.15); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
+  .day-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .duration { display: inline-flex; align-items: center; background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3); border-radius: 99px; padding: 3px 9px; font-size: 10px; color: #a78bfa; font-family: 'Space Mono', monospace; }
+  .day-status { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.2s; }
+  .day-status.done-btn { border-color: var(--green); background: rgba(34,197,94,0.15); color: var(--green); }
+  .chevron { font-size: 11px; color: var(--muted); transition: transform 0.3s; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* DAY BODY */
+  .day-body { display: none; border-top: 1px solid var(--border); padding: 20px 18px 22px; }
+  .day-body.open { display: block; }
+
+  /* SUBHEADERS */
+  .sub-label {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    margin: 22px 0 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .sub-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* STEP TUTORIAL */
+  .steps-list { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
+  .step {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--surface2); border-radius: 10px; padding: 14px 15px;
+  }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent2); color: #fff;
+    font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .step-content { flex: 1; }
+  .step-title { font-size: 13.5px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+  .step-desc { font-size: 13px; color: #94a3b8; line-height: 1.7; }
+  .step-img-hint {
+    margin-top: 8px; background: rgba(0,229,255,0.05);
+    border: 1px dashed rgba(0,229,255,0.2); border-radius: 7px;
+    padding: 8px 12px; font-size: 12px; color: var(--accent); font-style: italic;
+  }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #060a14; border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; margin: 10px 0;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    color: #7dd3fc; line-height: 1.9; overflow-x: auto; position: relative;
+  }
+  .code-block .comment { color: #3d5270; }
+  .code-block .keyword { color: var(--accent3); }
+  .code-block .string { color: #fbbf24; }
+  .code-block .prompt { color: var(--muted); user-select: none; }
+  .code-block .output { color: #6ee7b7; }
+  .copy-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px;
+    padding: 3px 8px; border-radius: 5px; cursor: pointer; transition: all 0.15s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+  /* CALLOUT BOXES */
+  .tip-box {
+    background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 10px; padding: 13px 15px; margin: 12px 0;
+    font-size: 13px; color: #fde68a; line-height: 1.65;
+  }
+  .tip-box strong { color: var(--warn); }
+  .warn-box {
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 10px; padding: 13px 15px; margin: 12px 0;
+    font-size: 13px; color: #fca5a5; line-height: 1.65;
+  }
+  .warn-box strong { color: var(--red); }
+  .success-box {
+    background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 10px; padding: 13px 15px; margin: 12px 0;
+    font-size: 13px; color: #86efac; line-height: 1.65;
+  }
+  .success-box strong { color: var(--green); }
+
+  /* TASK ITEMS */
+  .task-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; background: var(--surface2);
+    border-radius: 8px; margin-bottom: 6px; cursor: pointer; transition: background 0.15s;
+  }
+  .task-item:hover { background: #1e2d47; }
+  .task-check {
+    width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px;
+    flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; font-size: 11px; font-family: 'Space Mono', monospace;
+  }
+  .task-check.checked { background: var(--green); border-color: var(--green); color: #fff; }
+  .task-text { font-size: 13.5px; color: #cbd5e1; line-height: 1.5; }
+  .task-text.checked-text { text-decoration: line-through; color: var(--muted); }
+
+  /* YAML EXPLAIN */
+  .yaml-line { display: flex; gap: 12px; margin-bottom: 6px; align-items: flex-start; }
+  .yaml-code { font-family: 'Space Mono', monospace; font-size: 12px; color: #7dd3fc; min-width: 240px; }
+  .yaml-explain { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+
+  /* MILESTONE */
+  .milestone {
+    background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(0,229,255,0.08));
+    border: 1px solid rgba(124,58,237,0.3); border-radius: 14px;
+    padding: 22px; margin: 32px 0 0; text-align: center;
+  }
+  .milestone h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .milestone p { font-size: 13px; color: var(--muted); }
+
+  .reset-btn {
+    display: block; margin: 28px auto 0;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-family: 'Space Mono', monospace;
+    font-size: 10px; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  /* SCREENSHOT PLACEHOLDER */
+  .ss-box {
+    background: var(--surface2); border: 1px dashed #2a3f62;
+    border-radius: 10px; padding: 18px; margin: 10px 0; text-align: center;
+  }
+  .ss-box .ss-icon { font-size: 28px; margin-bottom: 6px; }
+  .ss-box p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .ss-box strong { color: #7dd3fc; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">📦 Tutorial Lengkap · Pemula dari Nol</div>
+  <h1>CI/CD dalam 1 Minggu</h1>
+  <p>Setiap langkah dijelaskan dari awal. Tidak ada yang di-skip. Klik gambar, bukan hanya baca teori.</p>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">7</div><div class="stat-label">Sesi belajar</div></div>
+    <div class="stat"><div class="stat-num">1–2j</div><div class="stat-label">Per sesi</div></div>
+    <div class="stat"><div class="stat-num">0→🚀</div><div class="stat-label">Level masuk</div></div>
+    <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Gratis</div></div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-info">
+    <span id="progressLabel">Progress kamu</span>
+    <span id="progressPct">0%</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+</div>
+
+<div class="container">
+
+  <!-- KONSEP DASAR -->
+  <div class="section-label">// Baca ini sebelum mulai — 5 menit</div>
+
+  <div class="intro-box">
+    <h3>🤔 CI/CD itu apa sih?</h3>
+    <p>
+      Bayangkan kamu jualan online. Setiap kamu update foto produk, kamu harus upload manual ke 5 toko berbeda. Melelahkan kan?<br><br>
+      <strong style="color:#fff;">CI/CD</strong> itu seperti punya asisten yang otomatis menyebarkan updatemu ke semua toko setiap kali kamu simpan perubahan — plus ngecek dulu apakah fotonya tidak rusak sebelum dikirim.
+    </p>
+    <div class="analogy">
+      💡 <strong>CI (Continuous Integration)</strong> = pengecekan otomatis setiap kamu simpan kode baru.<br>
+      💡 <strong>CD (Continuous Deployment)</strong> = pengiriman otomatis ke internet setelah lolos cek.
+    </div>
+  </div>
+
+  <div class="intro-box">
+    <h3>🛠 Tools yang kita pakai & alasannya</h3>
+    <p>
+      <strong style="color:#fff;">Git</strong> — alat pencatat setiap perubahan kode. Seperti "riwayat versi" di Google Docs, tapi untuk kode.<br><br>
+      <strong style="color:#fff;">GitHub</strong> — tempat menyimpan kode di cloud (gratis). Semua developer profesional pakai ini.<br><br>
+      <strong style="color:#fff;">GitHub Actions</strong> — fitur bawaan GitHub untuk otomasi. Kamu tulis instruksi, GitHub yang jalankan.<br><br>
+      <strong style="color:#fff;">GitHub Pages</strong> — hosting gratis dari GitHub. Websitemu bisa online tanpa bayar server.
+    </p>
+  </div>
+
+  <div class="note-flex">
+    <strong>📅 Cara pakai modul ini:</strong><br>
+    Sesi 1–3 adalah fondasi, sebaiknya dikerjakan urut. Sesi 4–7 bisa lompat hari. Semua progress tersimpan otomatis di browser — centang task yang sudah selesai, dan itu tetap ada walau kamu tutup tab.
+  </div>
+
+  <!-- ============ SESI 1 ============ -->
+  <div class="section-label">// Sesi-sesi belajar</div>
+
+  <div class="day-card" id="day-1">
+    <div class="day-header" onclick="toggleDay(1)">
+      <span class="day-num">SESI 1</span>
+      <div class="day-icon">💻</div>
+      <div class="day-info">
+        <div class="day-title">Setup: Install Git & Buat Akun GitHub</div>
+        <div class="day-sub">Persiapan semua tools sebelum belajar CI/CD</div>
+        <div class="day-tags">
+          <span class="tag tag-practice">praktik setup</span>
+          <span class="tag tag-tool">Git · GitHub</span>
+        </div>
+      </div>
+      <div class="day-right">
+        <span class="duration">⏱ 1 jam</span>
+        <div class="day-status" id="status-1" onclick="toggleDone(event,1)" title="Tandai selesai">✓</div>
+        <span class="chevron" id="chevron-1">▼</span>
+      </div>
+    </div>
+    <div class="day-body" id="body-1">
+
+      <div class="sub-label">A · Install Git di Mac</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Buka Terminal</div>
+            <div class="step-desc">Tekan <strong>Cmd + Space</strong> di keyboard → ketik <strong>Terminal</strong> → tekan Enter. Kamu akan melihat layar hitam/putih dengan teks. Jangan panik — ini normal!</div>
+            <div class="step-img-hint">🖥 Kamu akan lihat teks seperti: <code style="color:#fff">nama-mac ~ %</code> atau <code style="color:#fff">nama-mac:~ user$</code></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Cek apakah Git sudah ada</div>
+            <div class="step-desc">Ketik perintah berikut lalu tekan Enter:</div>
+            <div class="code-block" style="position:relative">
+<span class="prompt">% </span>git --version
+            </div>
+            <div class="step-desc">Kalau muncul sesuatu seperti <code style="color:#22d3a5">git version 2.xx.x</code> → Git sudah ada, skip ke langkah 4.<br>Kalau muncul pop-up "Install Command Line Developer Tools" → klik <strong>Install</strong> dan tunggu selesai.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Alternatif: Install via Homebrew (kalau pop-up tidak muncul)</div>
+            <div class="step-desc">Homebrew adalah "toko aplikasi" untuk Terminal. Install dulu Homebrew, lalu install Git lewat Homebrew.</div>
+            <div class="code-block" style="position:relative">
+<span class="comment"># Tempel perintah ini ke Terminal, tekan Enter, tunggu selesai:</span>
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+<span class="comment"># Setelah Homebrew selesai, install Git:</span>
+brew install git
+            </div>
+            <div class="tip-box"><strong>⏳ Sabar:</strong> Proses install bisa makan waktu 5–15 menit tergantung koneksi internet. Biarkan saja sampai selesai.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Perkenalkan dirimu ke Git (lakukan sekali seumur hidup)</div>
+            <div class="step-desc">Git butuh tahu siapa kamu. Ganti teks di dalam tanda kutip dengan nama dan email kamu yang asli:</div>
+            <div class="code-block" style="position:relative">
+<span class="prompt">% </span>git config --global user.name <span class="string">"Nama Lengkap Kamu"</span>
+<span class="prompt">% </span>git config --global user.email <span class="string">"emailkamu@gmail.com"</span>
+            </div>
+            <div class="step-desc">Kalau tidak ada error dan tidak ada output apapun → itu berarti <strong style="color:#22c55e">berhasil!</strong> (di Terminal, tidak ada output = sukses)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">B · Buat Akun GitHub</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Buka github.com</div>
+            <div class="step-desc">Buka browser Chrome → pergi ke <strong style="color:#7dd3fc">github.com</strong> → klik tombol <strong>"Sign up"</strong> di pojok kanan atas.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Isi formulir pendaftaran</div>
+            <div class="step-desc">
+              • <strong>Email:</strong> pakai email yang sama dengan yang kamu set di Git tadi<br>
+              • <strong>Password:</strong> buat yang kuat dan simpan baik-baik<br>
+              • <strong>Username:</strong> ini nama yang akan muncul di URL websitemu nanti (contoh: <code style="color:#7dd3fc">usman-dev</code>). Pilih yang mudah diingat, huruf kecil semua, pakai tanda hubung (-) kalau perlu spasi.
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Verifikasi email</div>
+            <div class="step-desc">GitHub akan kirim email verifikasi. Buka emailmu, cari email dari GitHub, klik link verifikasi. Akun kamu langsung aktif.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">C · Hubungkan Terminal ke GitHub (satu kali setup)</div>
+      <p style="font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:12px;">Supaya Terminal di Mac-mu bisa "ngobrol" dengan GitHub, kita perlu buat kunci digital (SSH key). Ini seperti membuat cap tangan digital yang GitHub kenali.</p>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Buat SSH key</div>
+            <div class="step-desc">Ketik di Terminal (ganti email dengan emailmu):</div>
+            <div class="code-block">
+<span class="prompt">% </span>ssh-keygen -t ed25519 -C <span class="string">"emailkamu@gmail.com"</span>
+            </div>
+            <div class="step-desc">Terminal akan tanya beberapa hal. <strong>Tekan Enter terus</strong> sampai selesai (kamu tidak perlu isi apa-apa).</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Salin SSH key-mu</div>
+            <div class="code-block">
+<span class="prompt">% </span>pbcopy &lt; ~/.ssh/id_ed25519.pub
+            </div>
+            <div class="step-desc">Tidak ada output = SSH key sudah tersalin ke clipboard (seperti Ctrl+C).</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Tambahkan ke GitHub</div>
+            <div class="step-desc">
+              1. Buka <strong style="color:#7dd3fc">github.com</strong> → klik foto profil kamu (pojok kanan atas) → <strong>Settings</strong><br>
+              2. Di menu kiri, klik <strong>"SSH and GPG keys"</strong><br>
+              3. Klik tombol hijau <strong>"New SSH key"</strong><br>
+              4. <strong>Title:</strong> isi bebas, misalnya "MacBook saya"<br>
+              5. <strong>Key:</strong> klik di kolom kosong lalu tekan <strong>Cmd+V</strong> (paste)<br>
+              6. Klik <strong>"Add SSH key"</strong>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Test koneksi</div>
+            <div class="code-block">
+<span class="prompt">% </span>ssh -T git@github.com
+            </div>
+            <div class="step-desc">Kalau ditanya "Are you sure you want to continue?" → ketik <strong>yes</strong> lalu Enter.<br>Kalau muncul: <code style="color:#22d3a5">Hi username! You've successfully authenticated</code> → 🎉 berhasil!</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">✅ Checklist Sesi 1</div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Git terinstall (git --version menampilkan versi)</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Nama dan email sudah di-set di Git</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Punya akun GitHub dan sudah verifikasi email</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">SSH key sudah ditambahkan ke GitHub</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">ssh -T git@github.com menampilkan pesan "successfully authenticated"</div></div>
+    </div>
+  </div>
+
+  <!-- ============ SESI 2 ============ -->
+  <div class="day-card" id="day-2">
+    <div class="day-header" onclick="toggleDay(2)">
+      <span class="day-num">SESI 2</span>
+      <div class="day-icon">📁</div>
+      <div class="day-info">
+        <div class="day-title">Repository Pertama & Push ke GitHub</div>
+        <div class="day-sub">Buat "gudang kode" di GitHub dan upload file HTML kamu</div>
+        <div class="day-tags">
+          <span class="tag tag-practice">praktik</span>
+          <span class="tag tag-tool">Git · GitHub</span>
+        </div>
+      </div>
+      <div class="day-right">
+        <span class="duration">⏱ 1 jam</span>
+        <div class="day-status" id="status-2" onclick="toggleDone(event,2)" title="Tandai selesai">✓</div>
+        <span class="chevron" id="chevron-2">▼</span>
+      </div>
+    </div>
+    <div class="day-body" id="body-2">
+
+      <div class="sub-label">A · Pahami dulu konsepnya</div>
+      <div class="intro-box" style="margin-bottom:14px">
+        <h3>📦 Apa itu Repository?</h3>
+        <p>Repository (repo) = folder proyekmu, tapi versi "pintar" yang menyimpan seluruh riwayat perubahan kode dari awal sampai sekarang. Analoginya seperti Google Drive, tapi khusus untuk kode dan bisa merekam semua edit yang pernah kamu buat.</p>
+        <div class="analogy">
+          <strong>Local repo</strong> = folder di laptop kamu<br>
+          <strong>Remote repo</strong> = salinan folder itu di server GitHub (di cloud)
+        </div>
+      </div>
+
+      <div class="sub-label">B · Buat Repository di GitHub</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Buka github.com dan login</div>
+            <div class="step-desc">Klik tombol <strong style="color:#22d3a5">+</strong> di pojok kanan atas → pilih <strong>"New repository"</strong>.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Isi detail repository</div>
+            <div class="step-desc">
+              • <strong>Repository name:</strong> ketik <code style="color:#fbbf24">proyek-cicd</code> (huruf kecil, pakai tanda hubung)<br>
+              • <strong>Description:</strong> boleh diisi bebas, contoh: "Belajar CI/CD pertamaku"<br>
+              • Pilih <strong>Public</strong> (supaya bisa diakses via GitHub Pages nanti)<br>
+              • <strong>JANGAN centang</strong> "Add a README file" (biarkan semua checkbox kosong)<br>
+              • Klik tombol hijau <strong>"Create repository"</strong>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Halaman repo kosong akan muncul</div>
+            <div class="step-desc">GitHub akan menampilkan halaman dengan instruksi. <strong>Biarkan halaman ini terbuka</strong> — kita akan butuh URL-nya nanti.</div>
+            <div class="step-img-hint">🖥 Di halaman itu ada tulisan "Quick setup". Cari URL yang mirip: <code style="color:#fff">git@github.com:usernamekamu/proyek-cicd.git</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">C · Hubungkan folder lokal ke GitHub</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Buka folder proyekmu di Terminal</div>
+            <div class="step-desc">Kita perlu masuk ke folder HTML yang sudah kamu buat sebelumnya. Perintah <code style="color:#7dd3fc">cd</code> = "change directory" (pindah folder).</div>
+            <div class="code-block">
+<span class="comment"># Pindah ke folder proyek kamu</span>
+<span class="comment"># Ganti "nama-folder-kamu" sesuai nama folder proyekmu</span>
+<span class="prompt">% </span><span class="keyword">cd</span> ~/Documents/belajar-web
+
+<span class="comment"># Kalau folder belum ada, buat dulu:</span>
+<span class="prompt">% </span>mkdir ~/Documents/belajar-web
+<span class="prompt">% </span><span class="keyword">cd</span> ~/Documents/belajar-web
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Buat file HTML sederhana (kalau belum ada)</div>
+            <div class="step-desc">Buka VS Code, buat file <code style="color:#fbbf24">index.html</code> di folder tersebut dengan isi minimal seperti ini:</div>
+            <div class="code-block">
+&lt;!DOCTYPE html&gt;
+&lt;html lang=<span class="string">"id"</span>&gt;
+&lt;head&gt;
+  &lt;meta charset=<span class="string">"UTF-8"</span>&gt;
+  &lt;title&gt;Proyek CI/CD Pertamaku&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Halo, ini website pertamaku dengan CI/CD!&lt;/h1&gt;
+  &lt;p&gt;Setiap kali saya edit dan push, website ini otomatis update.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Inisialisasi Git di folder ini</div>
+            <div class="step-desc">Perintah ini "mengaktifkan" Git di foldermu — hanya dilakukan sekali per proyek.</div>
+            <div class="code-block">
+<span class="prompt">% </span>git init
+<span class="output">Initialized empty Git repository in /Users/.../belajar-web/.git/</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Tambahkan semua file dan buat commit pertama</div>
+            <div class="step-desc">
+              <strong>git add .</strong> = "tandai semua file untuk disimpan"<br>
+              <strong>git commit -m "..."</strong> = "simpan snapshot dengan pesan catatan"
+            </div>
+            <div class="code-block">
+<span class="prompt">% </span>git add .
+<span class="prompt">% </span>git commit -m <span class="string">"commit pertama: tambah index.html"</span>
+<span class="output">[main (root-commit) a1b2c3d] commit pertama: tambah index.html
+ 1 file changed, 10 insertions(+)</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <div class="step-title">Hubungkan ke GitHub dan push</div>
+            <div class="step-desc">Ganti <code style="color:#fbbf24">USERNAMEMU</code> dengan username GitHub kamu yang sebenarnya:</div>
+            <div class="code-block">
+<span class="prompt">% </span>git remote add origin git@github.com:<span class="string">USERNAMEMU</span>/proyek-cicd.git
+<span class="prompt">% </span>git branch -M main
+<span class="prompt">% </span>git push -u origin main
+<span class="output">Enumerating objects: 3, done.
+Writing objects: 100% (3/3), done.
+Branch 'main' set up to track remote branch 'main' from 'origin'.</span>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <div class="step-title">Verifikasi di GitHub</div>
+            <div class="step-desc">Refresh halaman GitHub repo kamu. File <code style="color:#7dd3fc">index.html</code> sekarang harus muncul di sana! 🎉</div>
+            <div class="success-box"><strong>✅ Berhasil!</strong> Kamu baru saja melakukan push pertamamu ke GitHub. Ini fondasi dari semua CI/CD — setiap push inilah yang nanti memicu otomasi berjalan.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">D · Alur kerja sehari-hari setelah ini</div>
+      <p style="font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:10px;">Untuk sesi-sesi selanjutnya, setiap kali kamu edit kode dan mau kirim ke GitHub, cukup 3 perintah ini:</p>
+      <div class="code-block">
+<span class="comment"># 1. Tandai semua perubahan</span>
+<span class="prompt">% </span>git add .
+
+<span class="comment"># 2. Simpan dengan pesan catatan (isi pesan sesuai apa yang kamu ubah)</span>
+<span class="prompt">% </span>git commit -m <span class="string">"deskripsi perubahan kamu"</span>
+
+<span class="comment"># 3. Kirim ke GitHub</span>
+<span class="prompt">% </span>git push
+      </div>
+      <div class="tip-box"><strong>💡 Tips commit message:</strong> Biasakan tulis pesan commit yang jelas. Bukan "update" atau "fix" — tapi "tambah section About di halaman utama" atau "perbaiki warna tombol merah". Ini penting kalau nanti proyek kamu besar.</div>
+
+      <div class="sub-label">✅ Checklist Sesi 2</div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Repository "proyek-cicd" sudah dibuat di GitHub</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">file index.html sudah muncul di halaman GitHub repo</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Coba edit index.html, lalu git add → commit → push → refresh GitHub (file harus berubah)</div></div>
+    </div>
+  </div>
+
+  <!-- ============ SESI 3 ============ -->
+  <div class="day-card" id="day-3">
+    <div class="day-header" onclick="toggleDay(3)">
+      <span class="day-num">SESI 3</span>
+      <div class="day-icon">⚙️</div>
+      <div class="day-info">
+        <div class="day-title">File YAML: Nulis Instruksi Otomasi Pertama</div>
+        <div class="day-sub">Ini inti dari GitHub Actions — kamu nulis "resep", GitHub yang masak</div>
+        <div class="day-tags">
+          <span class="tag tag-theory">konsep YAML</span>
+          <span class="tag tag-practice">praktik</span>
+          <span class="tag tag-tool">GitHub Actions</span>
+        </div>
+      </div>
+      <div class="day-right">
+        <span class="duration">⏱ 1.5 jam</span>
+        <div class="day-status" id="status-3" onclick="toggleDone(event,3)" title="Tandai selesai">✓</div>
+        <span class="chevron" id="chevron-3">▼</span>
+      </div>
+    </div>
+    <div class="day-body" id="body-3">
+
+      <div class="sub-label">A · Apa itu YAML?</div>
+      <div class="intro-box" style="margin-bottom:14px">
+        <h3>📝 YAML = Bahasa instruksi yang mudah dibaca manusia</h3>
+        <p>YAML (dibaca "yam-el") adalah format penulisan konfigurasi. GitHub Actions membaca file YAML untuk tahu apa yang harus dilakukan secara otomatis.<br><br>
+        Analoginya: YAML itu seperti resep masak. Kamu tulis: "kalau ada tamu datang (push), panaskan oven (jalankan server), lalu panggang kue (deploy website)".</p>
+        <div class="analogy">⚠️ YAML sangat sensitif spasi! Indentasi (spasi di awal baris) menentukan struktur. Selalu pakai SPASI (bukan Tab). 2 spasi per level indentasi.</div>
+      </div>
+
+      <div class="sub-label">B · Bedah struktur YAML baris per baris</div>
+      <div class="code-block">
+<span class="comment"># Baris dimulai dengan # adalah komentar (tidak dieksekusi)</span>
+
+<span class="keyword">name</span>: Workflow Pertamaku
+
+<span class="keyword">on</span>:
+  push:
+    branches: [ main ]
+
+<span class="keyword">jobs</span>:
+  sapa-dunia:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+      - name: Sapa dunia
+        run: echo <span class="string">"Halo CI/CD!"</span>
+      </div>
+      <p style="font-size:13px;color:#94a3b8;margin:12px 0 8px;">Penjelasan tiap bagian:</p>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;">
+        <div class="yaml-line"><div class="yaml-code"><span style="color:#22d3a5">name:</span> Workflow Pertamaku</div><div class="yaml-explain">Nama workflow-mu. Bebas diisi apa saja. Ini yang muncul di tab Actions GitHub.</div></div>
+        <div class="yaml-line" style="margin-top:8px"><div class="yaml-code"><span style="color:#22d3a5">on: push:</span></div><div class="yaml-explain">Kapan workflow ini dijalankan? Jawaban: setiap ada "push" ke GitHub.</div></div>
+        <div class="yaml-line" style="margin-top:8px"><div class="yaml-code"><span style="color:#22d3a5">branches: [main]</span></div><div class="yaml-explain">Khusus push ke branch bernama "main" saja yang memicu workflow ini.</div></div>
+        <div class="yaml-line" style="margin-top:8px"><div class="yaml-code"><span style="color:#22d3a5">jobs:</span></div><div class="yaml-explain">Daftar "pekerjaan" yang akan dijalankan. Bisa ada banyak pekerjaan sekaligus.</div></div>
+        <div class="yaml-line" style="margin-top:8px"><div class="yaml-code"><span style="color:#22d3a5">runs-on: ubuntu-latest</span></div><div class="yaml-explain">GitHub akan menyediakan server Ubuntu (Linux) gratis untuk menjalankan kode. Kamu tidak perlu sediakan server sendiri!</div></div>
+        <div class="yaml-line" style="margin-top:8px"><div class="yaml-code"><span style="color:#22d3a5">steps:</span></div><div class="yaml-explain">Urutan langkah di dalam satu pekerjaan. Dijalankan dari atas ke bawah.</div></div>
+        <div class="yaml-line" style="margin-top:8px"><div class="yaml-code"><span style="color:#22d3a5">uses: actions/checkout@v4</span></div><div class="yaml-explain">"Pinjam" aksi siap pakai dari GitHub. Aksi ini mendownload kode kamu ke server GitHub.</div></div>
+        <div class="yaml-line" style="margin-top:8px"><div class="yaml-code"><span style="color:#22d3a5">run: echo "..."</span></div><div class="yaml-explain">Jalankan perintah Terminal biasa. echo = print/cetak teks.</div></div>
+      </div>
+
+      <div class="sub-label">C · Buat workflow pertama langkah demi langkah</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Buat folder .github/workflows/ di proyekmu</div>
+            <div class="step-desc">Di Terminal (pastikan sudah di folder proyekmu):</div>
+            <div class="code-block">
+<span class="prompt">% </span>mkdir -p .github/workflows
+            </div>
+            <div class="step-desc">Tanda titik di depan <code style="color:#7dd3fc">.github</code> artinya folder tersembunyi. Di Finder tidak akan terlihat, tapi di Terminal dan VS Code bisa terlihat.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Buat file workflow di VS Code</div>
+            <div class="step-desc">Buka VS Code → buka folder proyekmu → di panel kiri, klik folder <code style="color:#7dd3fc">.github</code> → klik folder <code style="color:#7dd3fc">workflows</code> → klik ikon "New File" → beri nama <code style="color:#fbbf24">halo-dunia.yml</code></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Salin isi file ini persis</div>
+            <div class="code-block">
+name: Workflow Pertamaku
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  sapa-dunia:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Tampilkan pesan
+        run: echo "Halo! Workflow CI/CD pertamaku berjalan!"
+
+      - name: Tampilkan tanggal
+        run: date
+            </div>
+            <div class="warn-box"><strong>⚠️ Perhatikan spasi!</strong> Pastikan indentasi persis sama seperti contoh di atas. Kalau ada tab atau spasi yang salah, workflow akan error.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Simpan, commit, dan push</div>
+            <div class="code-block">
+<span class="prompt">% </span>git add .
+<span class="prompt">% </span>git commit -m <span class="string">"tambah workflow pertama"</span>
+<span class="prompt">% </span>git push
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <div class="step-title">Lihat workflow berjalan di GitHub!</div>
+            <div class="step-desc">
+              1. Buka halaman GitHub repo-mu<br>
+              2. Klik tab <strong>"Actions"</strong> (di menu atas, antara Pull requests dan Projects)<br>
+              3. Kamu akan lihat workflow dengan nama "Workflow Pertamaku" sedang berjalan (ikon kuning berputar) atau sudah selesai (ikon hijau centang)<br>
+              4. Klik nama workflow → klik "sapa-dunia" → expand step "Tampilkan pesan"<br>
+              5. Kamu akan lihat output: <code style="color:#22d3a5">Halo! Workflow CI/CD pertamaku berjalan!</code>
+            </div>
+            <div class="success-box"><strong>🎉 Selamat!</strong> Kamu baru saja membuat CI/CD pertamamu! Setiap push ke branch main akan otomatis menjalankan instruksi di file YAML ini.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">✅ Checklist Sesi 3</div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Folder .github/workflows/ sudah ada di proyekmu</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">File halo-dunia.yml sudah ada di dalamnya</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Di tab Actions GitHub, workflow tampil dengan tanda centang hijau ✓</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Bisa melihat output "Halo! Workflow CI/CD pertamaku berjalan!" di log Actions</div></div>
+    </div>
+  </div>
+
+  <!-- ============ SESI 4 ============ -->
+  <div class="day-card" id="day-4">
+    <div class="day-header" onclick="toggleDay(4)">
+      <span class="day-num">SESI 4</span>
+      <div class="day-icon">🧪</div>
+      <div class="day-info">
+        <div class="day-title">CI: Otomatis Cek Kualitas HTML</div>
+        <div class="day-sub">Buat sistem yang otomatis menemukan error di kode sebelum live</div>
+        <div class="day-tags">
+          <span class="tag tag-practice">praktik CI</span>
+          <span class="tag tag-tool">GitHub Actions</span>
+        </div>
+      </div>
+      <div class="day-right">
+        <span class="duration">⏱ 1.5 jam</span>
+        <div class="day-status" id="status-4" onclick="toggleDone(event,4)" title="Tandai selesai">✓</div>
+        <span class="chevron" id="chevron-4">▼</span>
+      </div>
+    </div>
+    <div class="day-body" id="body-4">
+
+      <div class="sub-label">A · Konsep CI (Continuous Integration)</div>
+      <div class="intro-box" style="margin-bottom:14px">
+        <h3>🧪 Kenapa perlu pengecekan otomatis?</h3>
+        <p>Bayangkan kamu punya klien dan website-nya sudah live. Kamu edit kode → lupa tutup satu tag HTML → push → website rusak di depan klien. Malu kan?<br><br>
+        CI memastikan setiap kali kamu push, kode di-cek otomatis dulu. Kalau ada error, CI akan memberi tahu kamu <em>sebelum</em> kode masuk ke website.</p>
+        <div class="analogy">💡 Analoginya seperti quality control di pabrik. Setiap produk dicek sebelum dikirim ke pelanggan.</div>
+      </div>
+
+      <div class="sub-label">B · Buat workflow CI untuk validasi HTML</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Buat file baru: cek-html.yml</div>
+            <div class="step-desc">Di VS Code, buat file baru di folder <code style="color:#7dd3fc">.github/workflows/</code> bernama <code style="color:#fbbf24">cek-html.yml</code></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Isi dengan workflow CI berikut</div>
+            <div class="code-block">
+name: Cek Kualitas HTML
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  validasi-html:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ambil kode dari repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install HTML Validator
+        run: npm install -g html-validate
+
+      - name: Jalankan validasi HTML
+        run: html-validate "**/*.html"
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Push dan lihat hasilnya</div>
+            <div class="code-block">
+<span class="prompt">% </span>git add .
+<span class="prompt">% </span>git commit -m <span class="string">"tambah CI untuk validasi HTML"</span>
+<span class="prompt">% </span>git push
+            </div>
+            <div class="step-desc">Buka tab Actions di GitHub → lihat workflow "Cek Kualitas HTML" berjalan. Kalau HTML-mu bersih → hasilnya hijau ✓</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">C · Eksperimen: Sengaja buat error lalu lihat CI menangkapnya!</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Rusak file HTML-mu dengan sengaja</div>
+            <div class="step-desc">Buka <code style="color:#7dd3fc">index.html</code> di VS Code → hapus salah satu tag penutup, misalnya hapus <code style="color:#fbbf24">&lt;/h1&gt;</code> atau <code style="color:#fbbf24">&lt;/body&gt;</code></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Push perubahan yang "rusak" ini</div>
+            <div class="code-block">
+<span class="prompt">% </span>git add .
+<span class="prompt">% </span>git commit -m <span class="string">"uji coba: HTML sengaja rusak"</span>
+<span class="prompt">% </span>git push
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Lihat CI mendeteksi error!</div>
+            <div class="step-desc">Di tab Actions → workflow akan <strong style="color:#ef4444">merah ✗</strong>. Klik untuk lihat detail error. GitHub juga akan kirim email notifikasi bahwa ada yang gagal.<br><br>
+            Sekarang perbaiki HTML-mu (kembalikan tag yang dihapus), push lagi → CI kembali hijau.</div>
+            <div class="success-box"><strong>🎉 Inilah CI!</strong> Kode yang rusak ketahuan sebelum masuk ke production/live. Di dunia profesional, ini mencegah ratusan bug mencapai pengguna.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">✅ Checklist Sesi 4</div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Workflow cek-html.yml sudah berjalan (hijau) di tab Actions</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Sudah coba sengaja rusak HTML → CI menampilkan error (merah)</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Sudah perbaiki HTML dan CI kembali hijau</div></div>
+    </div>
+  </div>
+
+  <!-- ============ SESI 5 ============ -->
+  <div class="day-card" id="day-5">
+    <div class="day-header" onclick="toggleDay(5)">
+      <span class="day-num">SESI 5</span>
+      <div class="day-icon">🚀</div>
+      <div class="day-info">
+        <div class="day-title">CD: Deploy Otomatis ke GitHub Pages</div>
+        <div class="day-sub">Push kode → website langsung live di internet dalam 2 menit!</div>
+        <div class="day-tags">
+          <span class="tag tag-practice">praktik CD</span>
+          <span class="tag tag-tool">GitHub Pages</span>
+          <span class="tag tag-project">deploy</span>
+        </div>
+      </div>
+      <div class="day-right">
+        <span class="duration">⏱ 1.5 jam</span>
+        <div class="day-status" id="status-5" onclick="toggleDone(event,5)" title="Tandai selesai">✓</div>
+        <span class="chevron" id="chevron-5">▼</span>
+      </div>
+    </div>
+    <div class="day-body" id="body-5">
+
+      <div class="sub-label">A · Aktifkan GitHub Pages di setting repo</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Buka Settings repo</div>
+            <div class="step-desc">Di halaman GitHub repo kamu → klik tab <strong>"Settings"</strong> (paling kanan di menu atas repo, ada ikon gear).</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Cari menu Pages</div>
+            <div class="step-desc">Di sidebar kiri, scroll ke bawah → klik <strong>"Pages"</strong> (di bawah bagian "Code and automation").</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Ubah Source ke GitHub Actions</div>
+            <div class="step-desc">Di bagian <strong>"Build and deployment"</strong> → bagian <strong>"Source"</strong> → klik dropdown yang bertuliskan "Deploy from a branch" → pilih <strong>"GitHub Actions"</strong>.</div>
+            <div class="step-img-hint">🖥 Setelah pilih "GitHub Actions", tampilan akan berubah dan menawarkan beberapa template. Kita akan pakai workflow sendiri, jadi abaikan template tersebut.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">B · Buat workflow deploy otomatis</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Buat file baru: deploy.yml</div>
+            <div class="step-desc">Di VS Code, buat file baru di <code style="color:#7dd3fc">.github/workflows/</code> bernama <code style="color:#fbbf24">deploy.yml</code></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Isi dengan kode berikut persis</div>
+            <div class="code-block">
+name: Deploy ke GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload semua file website
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy ke GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Push dan tunggu deploy</div>
+            <div class="code-block">
+<span class="prompt">% </span>git add .
+<span class="prompt">% </span>git commit -m <span class="string">"setup CD: deploy otomatis ke GitHub Pages"</span>
+<span class="prompt">% </span>git push
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Tunggu 1–3 menit, lalu buka website-mu!</div>
+            <div class="step-desc">
+              1. Buka tab <strong>Actions</strong> di GitHub → tunggu workflow "Deploy ke GitHub Pages" selesai (hijau)<br>
+              2. Klik workflow tersebut → di bagian bawah ada link URL website-mu<br>
+              3. URL-nya akan berbentuk: <code style="color:#7dd3fc">https://USERNAMEMU.github.io/proyek-cicd/</code><br>
+              4. Atau cek di Settings → Pages → di bagian atas ada link "Your site is live at..."
+            </div>
+            <div class="success-box"><strong>🎉 Website kamu LIVE!</strong> Sekarang siapapun di seluruh dunia bisa membuka URL tersebut dan melihat website-mu. Dan setiap kali kamu push perubahan, website otomatis update dalam 1–2 menit!</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">C · Uji coba: edit → push → lihat perubahan live</div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Ubah teks di index.html (misal: ubah warna background atau tambah paragraf baru)</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">git add → commit → push</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Tunggu 1–2 menit → refresh URL website → perubahan terlihat otomatis!</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Share link website-mu ke seseorang — ini website pertamamu yang live di internet!</div></div>
+    </div>
+  </div>
+
+  <!-- ============ SESI 6 ============ -->
+  <div class="day-card" id="day-6">
+    <div class="day-header" onclick="toggleDay(6)">
+      <span class="day-num">SESI 6</span>
+      <div class="day-icon">🔀</div>
+      <div class="day-info">
+        <div class="day-title">Branch & Pull Request: Alur Kerja Aman</div>
+        <div class="day-sub">Cara kerja developer profesional supaya kode tidak asal masuk ke live</div>
+        <div class="day-tags">
+          <span class="tag tag-theory">konsep</span>
+          <span class="tag tag-practice">praktik</span>
+        </div>
+      </div>
+      <div class="day-right">
+        <span class="duration">⏱ 1.5 jam</span>
+        <div class="day-status" id="status-6" onclick="toggleDone(event,6)" title="Tandai selesai">✓</div>
+        <span class="chevron" id="chevron-6">▼</span>
+      </div>
+    </div>
+    <div class="day-body" id="body-6">
+
+      <div class="sub-label">A · Konsep Branch</div>
+      <div class="intro-box" style="margin-bottom:14px">
+        <h3>🌿 Branch = "cabang" paralel dari kodemu</h3>
+        <p>Bayangkan kamu punya website yang sudah live dan diakses klien. Kamu mau tambah fitur baru, tapi takut merusak yang sudah ada.<br><br>
+        Solusinya: buat branch baru. Kamu bebas bereksperimen di branch ini tanpa menyentuh branch <code style="color:#7dd3fc">main</code> (yang live). Setelah fiturnya siap dan sudah di-cek, baru digabungkan ke <code style="color:#7dd3fc">main</code>.</p>
+        <div class="analogy">
+          🌳 Branch <strong>main</strong> = versi website yang sudah live<br>
+          🌿 Branch <strong>fitur-baru</strong> = area eksperimen, aman untuk dicoba-coba
+        </div>
+      </div>
+
+      <div class="sub-label">B · Perintah-perintah branch</div>
+      <div class="code-block">
+<span class="comment"># Lihat branch yang ada (tanda * = kamu sedang di branch ini)</span>
+<span class="prompt">% </span>git branch
+<span class="output">* main</span>
+
+<span class="comment"># Buat branch baru sekaligus pindah ke sana</span>
+<span class="prompt">% </span>git checkout -b tambah-footer
+
+<span class="comment"># Kamu sekarang di branch "tambah-footer"</span>
+<span class="comment"># Edit kode, commit seperti biasa...</span>
+<span class="prompt">% </span>git add .
+<span class="prompt">% </span>git commit -m <span class="string">"tambah footer di halaman utama"</span>
+
+<span class="comment"># Push branch ini ke GitHub</span>
+<span class="prompt">% </span>git push origin tambah-footer
+
+<span class="comment"># Kembali ke branch main</span>
+<span class="prompt">% </span>git checkout main
+      </div>
+
+      <div class="sub-label">C · Pull Request: minta izin sebelum merge</div>
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Setelah push branch, buka GitHub</div>
+            <div class="step-desc">GitHub biasanya langsung menampilkan banner kuning: <em>"tambah-footer had recent pushes"</em> dengan tombol <strong>"Compare & pull request"</strong>. Klik tombol itu.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Isi detail Pull Request</div>
+            <div class="step-desc">
+              • <strong>Title:</strong> tulis apa yang kamu ubah, contoh: "Tambah footer dengan link sosmed"<br>
+              • <strong>Description:</strong> jelaskan lebih detail kalau perlu<br>
+              • Klik <strong>"Create pull request"</strong>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Lihat CI otomatis berjalan di PR!</div>
+            <div class="step-desc">Di halaman Pull Request, scroll ke bawah. Kamu akan melihat workflow CI (cek HTML) sedang berjalan otomatis untuk branch ini. GitHub tidak akan membiarkan merge kalau CI gagal.</div>
+            <div class="success-box"><strong>✅ CI lolos?</strong> Klik tombol hijau <strong>"Merge pull request"</strong> → <strong>"Confirm merge"</strong>. Branch-mu sekarang bergabung ke main, dan CD otomatis menjalankan deploy ke website!</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Hapus branch yang sudah di-merge</div>
+            <div class="step-desc">GitHub akan menampilkan tombol <strong>"Delete branch"</strong> setelah merge. Klik untuk membereskan. Di Terminal juga perlu update:</div>
+            <div class="code-block">
+<span class="comment"># Pindah ke main dan update ke versi terbaru</span>
+<span class="prompt">% </span>git checkout main
+<span class="prompt">% </span>git pull
+
+<span class="comment"># Hapus branch lokal yang sudah di-merge</span>
+<span class="prompt">% </span>git branch -d tambah-footer
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-label">✅ Checklist Sesi 6</div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Buat branch baru, edit sesuatu di HTML, push branch tersebut</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Buat Pull Request di GitHub</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Lihat CI berjalan otomatis di dalam PR</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Merge PR → website live update otomatis!</div></div>
+    </div>
+  </div>
+
+  <!-- ============ SESI 7 ============ -->
+  <div class="day-card" id="day-7">
+    <div class="day-header" onclick="toggleDay(7)">
+      <span class="day-num">SESI 7</span>
+      <div class="day-icon">🏆</div>
+      <div class="day-info">
+        <div class="day-title">Proyek Akhir: Portfolio dengan CI/CD Pipeline Lengkap</div>
+        <div class="day-sub">Gabungkan semua yang sudah dipelajari jadi satu proyek nyata</div>
+        <div class="day-tags">
+          <span class="tag tag-project">proyek akhir</span>
+          <span class="tag tag-practice">praktik penuh</span>
+        </div>
+      </div>
+      <div class="day-right">
+        <span class="duration">⏱ 2 jam</span>
+        <div class="day-status" id="status-7" onclick="toggleDone(event,7)" title="Tandai selesai">✓</div>
+        <span class="chevron" id="chevron-7">▼</span>
+      </div>
+    </div>
+    <div class="day-body" id="body-7">
+
+      <div class="sub-label">A · Target proyek akhir</div>
+      <div class="intro-box" style="margin-bottom:14px">
+        <h3>🎯 Apa yang akan kamu buat?</h3>
+        <p>Halaman portfolio sederhana yang bisa kamu tunjukkan ke klien, dilengkapi dengan CI/CD pipeline penuh:<br><br>
+        ✅ Setiap push otomatis cek kualitas HTML (CI)<br>
+        ✅ Setelah lolos, otomatis deploy ke internet (CD)<br>
+        ✅ Punya URL publik yang bisa dibagikan<br>
+        ✅ Bisa update kapan saja hanya dengan push</p>
+      </div>
+
+      <div class="sub-label">B · Template HTML portfolio (titik awal)</div>
+      <div class="code-block">
+&lt;!DOCTYPE html&gt;
+&lt;html lang=<span class="string">"id"</span>&gt;
+&lt;head&gt;
+  &lt;meta charset=<span class="string">"UTF-8"</span>&gt;
+  &lt;meta name=<span class="string">"viewport"</span> content=<span class="string">"width=device-width, initial-scale=1.0"</span>&gt;
+  &lt;title&gt;Portfolio - Nama Kamu&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: sans-serif; max-width: 600px; margin: 60px auto; padding: 0 20px; }
+    h1 { font-size: 2rem; }
+    .tagline { color: #666; font-size: 1.1rem; }
+    .skills { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+    .skill { background: #e0f2fe; padding: 4px 12px; border-radius: 99px; font-size: 14px; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;👋 Halo, saya Nama Kamu&lt;/h1&gt;
+  &lt;p class=<span class="string">"tagline"</span>&gt;Web Developer yang sedang belajar&lt;/p&gt;
+  &lt;h2&gt;Skills&lt;/h2&gt;
+  &lt;div class=<span class="string">"skills"</span>&gt;
+    &lt;span class=<span class="string">"skill"</span>&gt;HTML&lt;/span&gt;
+    &lt;span class=<span class="string">"skill"</span>&gt;CSS&lt;/span&gt;
+    &lt;span class=<span class="string">"skill"</span>&gt;Git&lt;/span&gt;
+    &lt;span class=<span class="string">"skill"</span>&gt;CI/CD&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;h2&gt;Kontak&lt;/h2&gt;
+  &lt;p&gt;📧 emailkamu@gmail.com&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+      </div>
+
+      <div class="sub-label">C · Checklist pipeline lengkap</div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Sesuaikan template portfolio dengan data diri kamu (nama, skill, kontak)</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Pastikan 2 file workflow sudah ada: cek-html.yml dan deploy.yml</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Push → cek tab Actions → pastikan keduanya hijau ✓</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Buka URL github.io-mu dan pastikan portfolio-mu tampil</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Buat branch "perbaikan-tampilan", ubah sesuatu (warna, font, teks), PR, merge</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Verifikasi: setelah merge, website live otomatis update dalam 2 menit</div></div>
+
+      <div class="sub-label">D · Rekap: apa yang sudah kamu kuasai</div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Git: init, add, commit, push, branch, merge, pull</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">GitHub: repository, SSH key, tab Actions, Pull Request, Settings Pages</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">YAML: struktur on/jobs/steps, menulis workflow sendiri</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">CI: validasi otomatis setiap push, workflow merah saat ada error</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">CD: deploy otomatis ke GitHub Pages, URL publik gratis</div></div>
+      <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Pull Request workflow: kode aman sebelum masuk ke live</div></div>
+
+      <div class="tip-box">
+        <strong>🚀 Langkah selanjutnya setelah 1 minggu ini:</strong><br>
+        • <strong>Vercel / Netlify</strong> — deploy lebih canggih, support domain custom gratis<br>
+        • <strong>Environment Variables</strong> — simpan password dan API key aman di CI/CD<br>
+        • <strong>GitHub Actions Marketplace</strong> — ribuan aksi siap pakai (kirim notifikasi Slack, test otomatis, dll)<br>
+        • <strong>Docker</strong> — packaging aplikasi agar bisa jalan di mana saja
+      </div>
+    </div>
+  </div>
+
+  <!-- MILESTONE -->
+  <div class="milestone">
+    <h3>🎉 Selesai 7 Sesi = Developer dengan CI/CD Pipeline Nyata</h3>
+    <p>Kamu akan punya portfolio live di internet, dengan sistem otomasi yang sama dipakai developer profesional di perusahaan teknologi besar. Tidak sedikit freelancer yang belum pakai ini.</p>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()">↺ Reset semua progress</button>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'cicd-modul-v2';
+
+function getState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { days: {}, tasks: [] }; }
+  catch { return { days: {}, tasks: [] }; }
+}
+function saveState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+function toggleDay(n) {
+  const body = document.getElementById('body-' + n);
+  const chev = document.getElementById('chevron-' + n);
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+}
+
+function toggleDone(e, n) {
+  e.stopPropagation();
+  const btn = document.getElementById('status-' + n);
+  const card = document.getElementById('day-' + n);
+  const wasDone = btn.classList.contains('done-btn');
+  btn.classList.toggle('done-btn', !wasDone);
+  btn.style.color = !wasDone ? 'var(--green)' : '';
+  card.classList.toggle('done', !wasDone);
+  const s = getState(); s.days[n] = !wasDone; saveState(s); updateProgress();
+}
+
+function toggleTask(el) {
+  const check = el.querySelector('.task-check');
+  const text = el.querySelector('.task-text');
+  const was = check.classList.contains('checked');
+  check.classList.toggle('checked', !was);
+  check.textContent = !was ? '✓' : '';
+  text.classList.toggle('checked-text', !was);
+  const all = document.querySelectorAll('.task-item');
+  const idx = Array.from(all).indexOf(el);
+  const s = getState();
+  if (!s.tasks) s.tasks = [];
+  s.tasks[idx] = !was;
+  saveState(s); updateProgress();
+}
+
+function updateProgress() {
+  const allTasks = document.querySelectorAll('.task-item').length;
+  const doneTasks = document.querySelectorAll('.task-check.checked').length;
+  const doneDays = Object.values(getState().days || {}).filter(Boolean).length;
+  const total = allTasks + 7;
+  const done = doneTasks + doneDays;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressLabel').textContent = pct === 100 ? '🎉 Semua selesai!' : 'Progress kamu';
+}
+
+function restoreState() {
+  const s = getState();
+  Object.entries(s.days || {}).forEach(([n, done]) => {
+    if (done) {
+      const btn = document.getElementById('status-' + n);
+      const card = document.getElementById('day-' + n);
+      if (btn) { btn.classList.add('done-btn'); btn.style.color = 'var(--green)'; }
+      if (card) card.classList.add('done');
+    }
+  });
+  const allTasks = document.querySelectorAll('.task-item');
+  (s.tasks || []).forEach((checked, idx) => {
+    if (checked && allTasks[idx]) {
+      const c = allTasks[idx].querySelector('.task-check');
+      const t = allTasks[idx].querySelector('.task-text');
+      c.classList.add('checked'); c.textContent = '✓';
+      t.classList.add('checked-text');
+    }
+  });
+  updateProgress();
+}
+
+function resetAll() {
+  if (confirm('Reset semua progress? Ini tidak bisa di-undo.')) {
+    localStorage.removeItem(STORAGE_KEY); location.reload();
+  }
+}
+
+restoreState();
+
+// Auto-open sesi 1
+const b1 = document.getElementById('body-1');
+const c1 = document.getElementById('chevron-1');
+if (b1 && !b1.classList.contains('open')) { b1.classList.add('open'); c1.classList.add('open'); }
+</script>
+</body>
 </html>
